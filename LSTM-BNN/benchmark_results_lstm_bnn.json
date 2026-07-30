@@ -1,0 +1,10 @@
+{
+  "model": "lstm_bnn",
+  "duration_seconds": 718.0739907999814,
+  "peak_memory_bytes": 76271616,
+  "estimated_flops": 93352458240,
+  "RMSE": 1474.1733046161517,
+  "MAE": 852.8450839764917,
+  "MAPE": 76.65390652808016,
+  "average_uncertainty": 10.340755777256884
+}
