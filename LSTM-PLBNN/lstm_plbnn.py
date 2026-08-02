@@ -51,12 +51,6 @@ class NumpyLSTM:
                     mu_val = np.zeros((output_size, 1))
                 else:
                     mu_val = np.zeros((hidden_size, 1))
-            
-            # rho_val = np.full_like(mu_val, -5.0)
-            
-            # # This mimics the standard LSTM layout dynamically
-            # setattr(self, f"{name}_mu", mu_val)
-            # setattr(self, f"{name}_rho", rho_val)
 
             setattr(self, f"{name}_mu", mu_val)
             
@@ -71,16 +65,6 @@ class NumpyLSTM:
         self.sampled = {}
 
         for name in self.param_names:
-            # mu = getattr(self, f"{name}_mu")
-            # rho = getattr(self, f"{name}_rho")
-            # sigma = softplus(rho)
-            # eps = np.random.randn(*mu.shape)
-            # value = mu + sigma * eps
-            # self.sampled[name] = {
-            #     "value": value,
-            #     "sigma": sigma,
-            #     "eps": eps,
-            # }
             mu = getattr(self, f"{name}_mu")
             
             rho = self.layer_rho[name]
@@ -105,12 +89,6 @@ class NumpyLSTM:
         kl = 0.0
         for name in self.param_names:
             mu = getattr(self, f"{name}_mu")
-            # rho = getattr(self, f"{name}_rho")
-            # sigma = softplus(rho)
-            # kl += np.sum(
-            #     np.log(self.prior_sigma / sigma)
-            #     + (sigma ** 2 + mu ** 2) / (2.0 * self.prior_sigma ** 2) - 0.5
-            # )
 
             rho = self.layer_rho[name]
             
@@ -199,13 +177,6 @@ class NumpyLSTM:
         grads = {}
         for name in self.param_names:
             mu = getattr(self, f"{name}_mu")
-            # rho = getattr(self, f"{name}_rho")
-            # sigma = softplus(rho)
-            # eps = self.sampled[name]["eps"]
-
-            # dmu = grads_w[name]
-            # dsigma = grads_w[name] * eps
-            # drho = dsigma * sigmoid(rho)
 
             rho = self.layer_rho[name]
             sigma = softplus(rho)
@@ -216,7 +187,6 @@ class NumpyLSTM:
             drho = dsigma * sigmoid(rho)
 
             dmu += kl_scale * (mu / (self.prior_sigma ** 2))
-            # drho += kl_scale * (-1.0 / sigma + sigma / (self.prior_sigma ** 2)) * sigmoid(rho)
 
             drho += kl_scale * mu.size * (
                 -1.0/sigma
@@ -228,7 +198,6 @@ class NumpyLSTM:
 
             # Store matching names to iterate through later
             grads[name + "_mu"] = dmu
-            # grads[name + "_rho"] = drho
             grads[name + "_layer_rho"] = drho
 
         return grads
@@ -252,17 +221,6 @@ class NumpyLSTM:
                 epoch_kl += kl / dataset_size
 
                 grads = self.backward(y_pred, target, caches, kl_scale=1.0 / dataset_size)
-
-                # DYNAMIC LOOKUP AND UPDATE MATCHING THE STANDARD LSTM
-                # for key in grads:
-                #     grad = grads[key]
-                #     # Direct weight update syntax via reflection strings
-                #     setattr(
-                #         self,
-                #         key,
-                #         getattr(self, key) - self.lr * grad
-                #     )
-
                 for key, grad in grads.items():
                 
                     if key.endswith("_mu"):
@@ -416,12 +374,7 @@ def main():
         per_timestep_mac = 4 * hidden_size * (hidden_size + input_size)
         wy_mac = output_size * hidden_size
         forward_mac_per_sample = seq_len * (per_timestep_mac + wy_mac)
-
-        # Bayesian overhead: sampling, KL, and posterior-gradient transforms
-        # sample_ops = int(num_params * 8)
-        # kl_ops = int(num_params * 8)
-        # backward_bayesian_ops = int(num_params * 4)
-
+        
         num_bayesian_layers = 10
         
         sample_ops = num_bayesian_layers * 8
