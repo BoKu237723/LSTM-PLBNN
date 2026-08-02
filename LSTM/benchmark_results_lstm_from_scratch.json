@@ -1,9 +1,0 @@
-{
-  "model": "lstm_from_scratch",
-  "duration_seconds": 185.77971140001318,
-  "peak_memory_bytes": 75321344,
-  "estimated_flops": 85674147840,
-  "RMSE": 1321.5231849785537,
-  "MAE": 777.0245598804244,
-  "MAPE": 184.22743041291258
-}
